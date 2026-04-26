@@ -6,15 +6,24 @@ import requests
 
 API_BASE = "https://economist.897654321.space/api"
 TIMEOUT = 15
+SECTION_RE = re.compile(r"economist\.com/([a-z-]+)/\d{4}/\d{2}/\d{2}/")
 
 
-def _safe_filename(title_en: str) -> str:
-    clean = re.sub(r'[<>:"/\\|?*]', "", title_en).strip()
-    return clean[:80]
+def _safe(text: str, max_len: int) -> str:
+    clean = re.sub(r'[<>:"/\\|?*]', "", text).strip()
+    return clean[:max_len]
 
 
-def pdf_filename(title_en: str) -> str:
-    return f"{_safe_filename(title_en)}.pdf"
+def section_from_url(url: str) -> str:
+    m = SECTION_RE.search(url)
+    return m.group(1) if m else "article"
+
+
+def pdf_filename(url: str, title_en: str) -> str:
+    """`[section] Title.pdf` — section disambiguates same-titled summaries
+    (e.g. weekly 'Business' / 'Politics' across the-world-this-week issues)."""
+    section = section_from_url(url)
+    return f"[{section}] {_safe(title_en, 80)}.pdf"
 
 
 def existing_files_for_date(date: str) -> set[str]:
@@ -27,5 +36,5 @@ def existing_files_for_date(date: str) -> set[str]:
         return set()
 
 
-def is_already_uploaded(date: str, title_en: str) -> bool:
-    return pdf_filename(title_en) in existing_files_for_date(date)
+def is_already_uploaded(date: str, url: str, title_en: str) -> bool:
+    return pdf_filename(url, title_en) in existing_files_for_date(date)
