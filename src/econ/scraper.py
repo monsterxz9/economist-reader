@@ -55,30 +55,44 @@ def _get(url: str) -> str:
     return r.text
 
 
-def list_homepage_articles(limit: int = 20) -> list[str]:
-    """Use multiple RSS feeds to gather recent article URLs.
+def list_homepage_articles(limit: int = 20, per_feed: int = 3) -> list[str]:
+    """Round-robin recent items across all RSS feeds for cross-section variety.
 
     Homepage HTML is served stripped on data-center IPs, so we lean on RSS
     which Economist exposes equally to everyone for indexer compatibility.
     """
-    seen: set[str] = set()
-    out: list[str] = []
+    per_feed_lists: list[list[str]] = []
     for feed in RSS_FEEDS:
         try:
             xml = _get(feed)
         except Exception as e:
             print(f"[scraper] feed {feed} failed: {e}")
+            per_feed_lists.append([])
             continue
+        feed_urls: list[str] = []
         for url in ARTICLE_URL_RE.findall(xml):
-            if url in seen:
-                continue
-            seen.add(url)
             slug = url.rsplit("/", 1)[-1]
             if any(p in slug for p in SKIP_SLUG_PATTERNS):
                 continue
+            feed_urls.append(url)
+            if len(feed_urls) >= per_feed:
+                break
+        per_feed_lists.append(feed_urls)
+
+    seen: set[str] = set()
+    out: list[str] = []
+    for round_idx in range(per_feed):
+        for feed_list in per_feed_lists:
+            if round_idx >= len(feed_list):
+                continue
+            url = feed_list[round_idx]
+            if url in seen:
+                continue
+            seen.add(url)
             out.append(url)
             if len(out) >= limit:
                 return out
+
     if not out:
         print("[scraper] WARNING: 0 articles found across all RSS feeds")
     return out
