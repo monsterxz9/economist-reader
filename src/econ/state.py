@@ -6,24 +6,23 @@ import requests
 
 API_BASE = "https://economist.897654321.space/api"
 TIMEOUT = 15
-SECTION_RE = re.compile(r"economist\.com/([a-z-]+)/\d{4}/\d{2}/\d{2}/")
-
-
-def _safe(text: str, max_len: int) -> str:
-    clean = re.sub(r'[<>:"/\\|?*]', "", text).strip()
-    return clean[:max_len]
+URL_RE = re.compile(r"economist\.com/([a-z-]+)/\d{4}/\d{2}/\d{2}/([a-z0-9-]+)")
 
 
 def section_from_url(url: str) -> str:
-    m = SECTION_RE.search(url)
+    m = URL_RE.search(url)
     return m.group(1) if m else "article"
 
 
-def pdf_filename(url: str, title_en: str) -> str:
-    """`[section] Title.pdf` — section disambiguates same-titled summaries
-    (e.g. weekly 'Business' / 'Politics' across the-world-this-week issues)."""
-    section = section_from_url(url)
-    return f"[{section}] {_safe(title_en, 80)}.pdf"
+def slug_from_url(url: str) -> str:
+    m = URL_RE.search(url)
+    return (m.group(2) if m else "article")[:80]
+
+
+def pdf_filename(url: str, title_en: str = "") -> str:
+    """`{section}__{url-slug}.pdf` — keeps URLs ASCII/spaceless to dodge zone WAF
+    quirks and keeps section as a sortable visual prefix."""
+    return f"{section_from_url(url)}__{slug_from_url(url)}.pdf"
 
 
 def existing_files_for_date(date: str) -> set[str]:
