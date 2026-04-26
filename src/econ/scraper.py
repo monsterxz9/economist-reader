@@ -7,6 +7,17 @@ UA = (
     "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/127.0.6533.103 Mobile Safari/537.36 Liskov"
 )
+HEADERS = {
+    "User-Agent": UA,
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Upgrade-Insecure-Requests": "1",
+}
 
 HOMEPAGE = "https://www.economist.com/"
 ARTICLE_PATH_RE = re.compile(r'href="(/[a-z-]+/\d{4}/\d{2}/\d{2}/[a-z0-9-]+)"')
@@ -16,7 +27,7 @@ PAYWALL_SENTINEL = "Subscribers to"
 
 
 def _get(url: str) -> str:
-    r = requests.get(url, headers={"User-Agent": UA}, timeout=30)
+    r = requests.get(url, headers=HEADERS, timeout=30)
     r.raise_for_status()
     return r.text
 
