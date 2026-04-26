@@ -19,8 +19,19 @@ HEADERS = {
     "Upgrade-Insecure-Requests": "1",
 }
 
-HOMEPAGE = "https://www.economist.com/"
-ARTICLE_PATH_RE = re.compile(r'href="(/[a-z-]+/\d{4}/\d{2}/\d{2}/[a-z0-9-]+)"')
+RSS_FEEDS = [
+    "https://www.economist.com/the-world-this-week/rss.xml",
+    "https://www.economist.com/leaders/rss.xml",
+    "https://www.economist.com/briefing/rss.xml",
+    "https://www.economist.com/finance-and-economics/rss.xml",
+    "https://www.economist.com/business/rss.xml",
+    "https://www.economist.com/united-states/rss.xml",
+    "https://www.economist.com/china/rss.xml",
+    "https://www.economist.com/asia/rss.xml",
+]
+ARTICLE_URL_RE = re.compile(
+    r"<link>(https://www\.economist\.com/[a-z-]+/\d{4}/\d{2}/\d{2}/[a-z0-9-]+)</link>"
+)
 
 MIN_PARA_CHARS = 200
 PAYWALL_SENTINEL = "Subscribers to"
@@ -33,12 +44,28 @@ def _get(url: str) -> str:
 
 
 def list_homepage_articles(limit: int = 20) -> list[str]:
-    html = _get(HOMEPAGE)
-    paths = list(dict.fromkeys(ARTICLE_PATH_RE.findall(html)))
-    if not paths:
-        print(f"[scraper] WARNING: 0 articles parsed from homepage ({len(html)} bytes)")
-        print(f"[scraper] first 800 chars: {html[:800]!r}")
-    return [f"https://www.economist.com{p}" for p in paths[:limit]]
+    """Use multiple RSS feeds to gather recent article URLs.
+
+    Homepage HTML is served stripped on data-center IPs, so we lean on RSS
+    which Economist exposes equally to everyone for indexer compatibility.
+    """
+    seen: set[str] = set()
+    out: list[str] = []
+    for feed in RSS_FEEDS:
+        try:
+            xml = _get(feed)
+        except Exception as e:
+            print(f"[scraper] feed {feed} failed: {e}")
+            continue
+        for url in ARTICLE_URL_RE.findall(xml):
+            if url not in seen:
+                seen.add(url)
+                out.append(url)
+                if len(out) >= limit:
+                    return out
+    if not out:
+        print("[scraper] WARNING: 0 articles found across all RSS feeds")
+    return out
 
 
 def fetch_article(url: str) -> dict:
