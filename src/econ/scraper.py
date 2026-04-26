@@ -20,7 +20,7 @@ HEADERS = {
 }
 
 RSS_FEEDS = [
-    "https://www.economist.com/the-world-this-week/rss.xml",
+    # Substantive sections first so they win the limit budget on busy runs.
     "https://www.economist.com/leaders/rss.xml",
     "https://www.economist.com/briefing/rss.xml",
     "https://www.economist.com/finance-and-economics/rss.xml",
@@ -28,10 +28,22 @@ RSS_FEEDS = [
     "https://www.economist.com/united-states/rss.xml",
     "https://www.economist.com/china/rss.xml",
     "https://www.economist.com/asia/rss.xml",
+    "https://www.economist.com/europe/rss.xml",
+    "https://www.economist.com/britain/rss.xml",
+    "https://www.economist.com/middle-east-and-africa/rss.xml",
+    "https://www.economist.com/the-americas/rss.xml",
+    "https://www.economist.com/international/rss.xml",
+    "https://www.economist.com/culture/rss.xml",
+    "https://www.economist.com/science-and-technology/rss.xml",
+    "https://www.economist.com/special-report/rss.xml",
+    "https://www.economist.com/books-and-arts/rss.xml",
+    "https://www.economist.com/obituary/rss.xml",
+    "https://www.economist.com/the-world-this-week/rss.xml",
 ]
 ARTICLE_URL_RE = re.compile(
     r"<link>(https://www\.economist\.com/[a-z-]+/\d{4}/\d{2}/\d{2}/[a-z0-9-]+)</link>"
 )
+SKIP_SLUG_PATTERNS = ("cartoon", "kals-cartoon", "graphic-detail", "podcast", "newsletter")
 
 MIN_PARA_CHARS = 200
 PAYWALL_SENTINEL = "Subscribers to"
@@ -58,11 +70,15 @@ def list_homepage_articles(limit: int = 20) -> list[str]:
             print(f"[scraper] feed {feed} failed: {e}")
             continue
         for url in ARTICLE_URL_RE.findall(xml):
-            if url not in seen:
-                seen.add(url)
-                out.append(url)
-                if len(out) >= limit:
-                    return out
+            if url in seen:
+                continue
+            seen.add(url)
+            slug = url.rsplit("/", 1)[-1]
+            if any(p in slug for p in SKIP_SLUG_PATTERNS):
+                continue
+            out.append(url)
+            if len(out) >= limit:
+                return out
     if not out:
         print("[scraper] WARNING: 0 articles found across all RSS feeds")
     return out
