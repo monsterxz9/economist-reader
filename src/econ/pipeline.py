@@ -22,8 +22,8 @@ def process_one(url: str, dry_run: bool = False, no_upload: bool = False, output
     if not date:
         return {"url": url, "status": "no_date"}
 
-    if state.is_already_uploaded(date, title):
-        return {"url": url, "status": "already_uploaded", "key": f"{date}/pdf/{state.pdf_filename(title)}"}
+    if state.is_already_uploaded(date, url, title):
+        return {"url": url, "status": "already_uploaded", "key": f"{date}/pdf/{state.pdf_filename(url, title)}"}
 
     if dry_run:
         return {"url": url, "status": "dry_run_ok"}
@@ -35,7 +35,7 @@ def process_one(url: str, dry_run: bool = False, no_upload: bool = False, output
         return {"url": url, "status": "ai_failed", "reason": str(e)}
 
     title_en = data.get("title_en") or title
-    filename = state.pdf_filename(title_en)
+    filename = state.pdf_filename(url, title_en)
     print(f"   → 生成 PDF: {filename}")
 
     if no_upload:
