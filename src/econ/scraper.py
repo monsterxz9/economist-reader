@@ -24,6 +24,9 @@ def _get(url: str) -> str:
 def list_homepage_articles(limit: int = 20) -> list[str]:
     html = _get(HOMEPAGE)
     paths = list(dict.fromkeys(ARTICLE_PATH_RE.findall(html)))
+    if not paths:
+        print(f"[scraper] WARNING: 0 articles parsed from homepage ({len(html)} bytes)")
+        print(f"[scraper] first 800 chars: {html[:800]!r}")
     return [f"https://www.economist.com{p}" for p in paths[:limit]]
 
 
