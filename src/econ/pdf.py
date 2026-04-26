@@ -28,14 +28,14 @@ REPO_FONT_DIR = Path(__file__).resolve().parents[2] / "fonts"
 CJK_FONT_CANDIDATES = [
     REPO_FONT_DIR / "NotoSansSC-Regular.ttf",
     Path("/System/Library/Fonts/STHeiti Light.ttc"),
-    Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"),
-    Path("/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc"),
+    Path("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc"),
+    Path("/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"),
 ]
 CJK_BOLD_CANDIDATES = [
     REPO_FONT_DIR / "NotoSansSC-Bold.ttf",
     Path("/System/Library/Fonts/STHeiti Medium.ttc"),
-    Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc"),
-    Path("/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc"),
+    Path("/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"),
+    Path("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc"),
 ]
 
 
